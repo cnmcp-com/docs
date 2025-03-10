@@ -14,15 +14,15 @@
         "tab": "Documentation",
         "groups": [
           {
-            "group": "Get Started",
+            "group": "开始使用",
             "pages": [
-              "introduction",
+              "introduction.zh",
               {
-                "group": "Quickstart",
+                "group": "快速开始",
                 "pages": [
-                  "quickstart/server",
-                  "quickstart/client",
-                  "quickstart/user"
+                  "quickstart/server.zh",
+                  "quickstart/client.zh",
+                  "quickstart/user.zh"
                 ]
               },
               "examples",
