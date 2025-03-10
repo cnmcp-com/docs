@@ -1,0 +1,346 @@
+---
+title: "提示"
+description: "创建可重用的提示模板和工作流"
+---
+
+提示使服务器能够定义可重用的提示模板和工作流，客户端可以轻松地将它们展示给用户和 LLM。它们提供了一种强大的方式来标准化和共享常见的 LLM 交互。
+
+<Note>
+  提示设计为**用户控制**，这意味着它们从服务器暴露给客户端，目的是让用户能够明确选择使用它们。
+</Note>
+
+## 概述
+
+MCP 中的提示是预定义的模板，可以：
+- 接受动态参数
+- 包含来自资源的上下文
+- 链接多个交互
+- 指导特定工作流
+- 作为 UI 元素展示（如斜杠命令）
+
+## 提示结构
+
+每个提示的定义如下：
+
+```typescript
+{
+  name: string;              // 提示的唯一标识符
+  description?: string;      // 人类可读的描述
+  arguments?: [              // 可选的参数列表
+    {
+      name: string;          // 参数标识符
+      description?: string;  // 参数描述
+      required?: boolean;    // 参数是否必需
+    }
+  ]
+}
+```
+
+## 发现提示
+
+客户端可以通过 `prompts/list` 端点发现可用提示：
+
+```typescript
+// 请求
+{
+  method: "prompts/list"
+}
+
+// 响应
+{
+  prompts: [
+    {
+      name: "analyze-code",
+      description: "分析代码以寻找潜在的改进",
+      arguments: [
+        {
+          name: "language",
+          description: "编程语言",
+          required: true
+        }
+      ]
+    }
+  ]
+}
+```
+
+## 使用提示
+
+要使用提示，客户端发送 `prompts/get` 请求：
+
+```typescript
+// 请求
+{
+  method: "prompts/get",
+  params: {
+    name: "analyze-code",
+    arguments: {
+      language: "python"
+    }
+  }
+}
+
+// 响应
+{
+  description: "分析 Python 代码以寻找潜在的改进",
+  messages: [
+    {
+      role: "user",
+      content: {
+        type: "text",
+        text: "请分析以下 Python 代码以寻找潜在的改进：\n\n```python\ndef calculate_sum(numbers):\n    total = 0\n    for num in numbers:\n        total = total + num\n    return total\n\nresult = calculate_sum([1, 2, 3, 4, 5])\nprint(result)\n```"
+      }
+    }
+  ]
+}
+```
+
+## 动态提示
+
+提示可以是动态的，并包含：
+
+### 嵌入资源上下文
+
+```json
+{
+  "name": "analyze-project",
+  "description": "分析项目日志和代码",
+  "arguments": [
+    {
+      "name": "timeframe",
+      "description": "分析日志的时间段",
+      "required": true
+    },
+    {
+      "name": "fileUri",
+      "description": "要审查的代码文件的 URI",
+      "required": true
+    }
+  ]
+}
+```
+
+处理 `prompts/get` 请求时：
+
+```json
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": {
+        "type": "text",
+        "text": "分析这些系统日志和代码文件中的任何问题："
+      }
+    },
+    {
+      "role": "user",
+      "content": {
+        "type": "resource",
+        "resource": {
+          "uri": "logs://recent?timeframe=1h",
+          "text": "[2024-03-14 15:32:11] ERROR: Connection timeout in network.py:127\n[2024-03-14 15:32:15] WARN: Retrying connection (attempt 2/3)\n[2024-03-14 15:32:20] ERROR: Max retries exceeded",
+          "mimeType": "text/plain"
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": {
+        "type": "resource",
+        "resource": {
+          "uri": "file:///path/to/code.py",
+          "text": "def connect_to_service(timeout=30):\n    retries = 3\n    for attempt in range(retries):\n        try:\n            return establish_connection(timeout)\n        except TimeoutError:\n            if attempt == retries - 1:\n                raise\n            time.sleep(5)\n\ndef establish_connection(timeout):\n    # Connection implementation\n    pass",
+          "mimeType": "text/x-python"
+        }
+      }
+    }
+  ]
+}
+```
+
+### 多步骤工作流
+
+```typescript
+const debugWorkflow = {
+  name: "debug-error",
+  async getMessages(error: string) {
+    return [
+      {
+        role: "user",
+        content: {
+          type: "text",
+          text: `我看到这个错误：${error}`
+        }
+      },
+      {
+        role: "assistant",
+        content: {
+          type: "text",
+          text: "我来帮你分析这个错误。到目前为止你尝试过什么？"
+        }
+      },
+      {
+        role: "user",
+        content: {
+          type: "text",
+          text: "我尝试过重启服务，但错误仍然存在。"
+        }
+      }
+    ];
+  }
+};
+```
+
+## 示例实现
+
+这是在 MCP 服务器中实现提示的完整示例：
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    import { Server } from "@modelcontextprotocol/sdk/server";
+    import {
+      ListPromptsRequestSchema,
+      GetPromptRequestSchema
+    } from "@modelcontextprotocol/sdk/types";
+
+    const PROMPTS = {
+      "git-commit": {
+        name: "git-commit",
+        description: "生成 Git 提交消息",
+        arguments: [
+          {
+            name: "changes",
+            description: "Git diff 或更改描述",
+            required: true
+          }
+        ]
+      },
+      "explain-code": {
+        name: "explain-code",
+        description: "解释代码如何工作",
+        arguments: [
+          {
+            name: "code",
+            description: "要解释的代码",
+            required: true
+          },
+          {
+            name: "language",
+            description: "编程语言",
+            required: false
+          }
+        ]
+      }
+    };
+
+    const server = new Server({
+      name: "example-prompts-server",
+      version: "1.0.0"
+    }, {
+      capabilities: {
+        prompts: {}
+      }
+    });
+
+    // 列出可用提示
+    server.setRequestHandler(ListPromptsRequestSchema, async () => {
+      return {
+        prompts: Object.values(PROMPTS)
+      };
+    });
+    ```
+  </Tab>
+  <Tab title="Python">
+    ```python
+    from mcp.server import Server
+    from mcp.types import Prompt, PromptArgument
+
+    PROMPTS = {
+        "git-commit": Prompt(
+            name="git-commit",
+            description="生成 Git 提交消息",
+            arguments=[
+                PromptArgument(
+                    name="changes",
+                    description="Git diff 或更改描述",
+                    required=True
+                )
+            ]
+        ),
+        "explain-code": Prompt(
+            name="explain-code",
+            description="解释代码如何工作",
+            arguments=[
+                PromptArgument(
+                    name="code",
+                    description="要解释的代码",
+                    required=True
+                ),
+                PromptArgument(
+                    name="language",
+                    description="编程语言",
+                    required=False
+                )
+            ]
+        )
+    }
+
+    app = Server("example-prompts-server")
+
+    @app.list_prompts()
+    async def list_prompts() -> list[Prompt]:
+        return list(PROMPTS.values())
+
+    @app.get_prompt()
+    async def get_prompt(name: str, arguments: dict) -> str:
+        if name not in PROMPTS:
+            raise ValueError(f"未找到提示：{name}")
+
+        prompt = PROMPTS[name]
+        if name == "git-commit":
+            return f"请为以下更改生成一个清晰的 Git 提交消息：\n\n{arguments['changes']}"
+        elif name == "explain-code":
+            language = arguments.get("language", "未知语言")
+            return f"请解释以下 {language} 代码的工作原理：\n\n{arguments['code']}"
+        else:
+            raise ValueError(f"未实现的提示：{name}")
+
+    # 启动服务器
+    async with stdio_server() as streams:
+        await app.run(
+            streams[0],
+            streams[1],
+            app.create_initialization_options()
+        )
+    ```
+  </Tab>
+</Tabs>
+
+## 最佳实践
+
+实现提示时：
+
+1. 使用清晰、描述性的提示名称
+2. 提供详细的参数描述
+3. 在适当时使用资源上下文
+4. 实现多步骤工作流
+5. 处理错误情况
+6. 验证参数
+7. 缓存常用提示
+8. 记录提示使用情况
+9. 考虑国际化
+10. 测试提示模板
+
+## 安全考虑
+
+处理提示时：
+
+- 验证所有参数
+- 限制资源访问
+- 清理用户输入
+- 实施速率限制
+- 审计提示使用
+- 保护敏感信息
+- 验证 MIME 类型
+- 监控提示性能 

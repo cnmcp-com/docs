@@ -11,7 +11,7 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "Documentation",
+        "tab": "文档",
         "groups": [
           {
             "group": "开始使用",
@@ -25,36 +25,36 @@
                   "quickstart/user.zh"
                 ]
               },
-              "examples",
-              "clients"
+              "examples.zh",
+              "clients.zh"
             ]
           },
           {
-            "group": "Tutorials",
+            "group": "教程",
             "pages": [
-              "tutorials/building-mcp-with-llms",
-              "docs/tools/debugging",
-              "docs/tools/inspector"
+              "tutorials/building-mcp-with-llms.zh" ,
+              "docs/tools/debugging.zh",
+              "docs/tools/inspector.zh"
             ]
           },
           {
-            "group": "Concepts",
+            "group": "概念",
             "pages": [
-              "docs/concepts/architecture",
-              "docs/concepts/resources",
-              "docs/concepts/prompts",
-              "docs/concepts/tools",
-              "docs/concepts/sampling",
-              "docs/concepts/roots",
-              "docs/concepts/transports"
+              "docs/concepts/architecture.zh",
+              "docs/concepts/resources.zh",
+              "docs/concepts/prompts.zh",
+              "docs/concepts/tools.zh",
+              "docs/concepts/sampling.zh",
+              "docs/concepts/roots.zh",
+              "docs/concepts/transports.zh"
             ]
           },
           {
-            "group": "Development",
+            "group": "开发",
             "pages": [
-              "development/updates",
-              "development/roadmap",
-              "development/contributing"
+              "development/updates.zh",
+              "development/roadmap.zh",
+              "development/contributing.zh"
             ]
           }
         ]
@@ -78,29 +78,25 @@
       "anchors": [
         {
           "anchor": "Python SDK",
-          "href": "https://github.com/modelcontextprotocol/python-sdk",
-          "icon": "python"
+          "href": "https://github.com/modelcontextprotocol/python-sdk"
         },
         {
           "anchor": "TypeScript SDK",
-          "href": "https://github.com/modelcontextprotocol/typescript-sdk",
-          "icon": "square-js"
+          "href": "https://github.com/modelcontextprotocol/typescript-sdk"
         },
         {
           "anchor": "Java SDK",
-          "href": "https://github.com/modelcontextprotocol/java-sdk",
-          "icon": "java"
+          "href": "https://github.com/modelcontextprotocol/java-sdk"
         },
         {
           "anchor": "Kotlin SDK",
-          "href": "https://github.com/modelcontextprotocol/kotlin-sdk",
-          "icon": "square-k"
+          "href": "https://github.com/modelcontextprotocol/kotlin-sdk"
         },
         {
           "anchor": "Specification",
-          "href": "https://spec.modelcontextprotocol.io",
-          "icon": "book"
+          "href": "https://spec.modelcontextprotocol.io"
         }
+        
       ]
     }
   },
