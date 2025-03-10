@@ -150,13 +150,14 @@ async def make_nws_request(url: str) -> dict[str, Any] | None:
 def format_alert(feature: dict) -> str:
     """将警报功能格式化为可读字符串。"""
     props = feature["properties"]
-    return f"""
-事件: {props.get('event', '未知')}
-地区: {props.get('areaDesc', '未知')}
-严重程度: {props.get('severity', '未知')}
-描述: {props.get('description', '无描述可用')}
-说明: {props.get('instruction', '未提供具体说明')}
-"""
+    return f
+    """
+    事件: {props.get('event', '未知')}
+    地区: {props.get('areaDesc', '未知')}
+    严重程度: {props.get('severity', '未知')}
+    描述: {props.get('description', '无描述可用')}
+    说明: {props.get('instruction', '未提供具体说明')}
+    """
 ```
 
 ### 实现工具执行
