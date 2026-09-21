@@ -15,7 +15,7 @@ MCP follows a client-server architecture where:
 
 ```mermaid
 flowchart LR
-    subgraph "&nbsp;Host&nbsp;"
+    subgraph "Host"
         client1[MCP Client]
         client2[MCP Client]
     end
@@ -267,7 +267,7 @@ Here's a basic example of implementing an MCP server:
             )
 
     if __name__ == "__main__":
-        asyncio.run(main)
+        asyncio.run(main())
     ```
   </Tab>
 </Tabs>
